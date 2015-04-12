@@ -2,7 +2,7 @@ class CreateDockerCvms < ActiveRecord::Migration
   def change
     create_table :docker_cvms do |t|
       t.string :container_name
-      t.integer :ispublid
+      t.integer :ispublic
       t.float :cpu
       t.integer :ram
       t.string :open_folder_path
