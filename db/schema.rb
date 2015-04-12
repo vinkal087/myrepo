@@ -11,11 +11,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150411152756) do
+ActiveRecord::Schema.define(version: 20150412212641) do
+
+  create_table "docker_cvm_states", force: true do |t|
+    t.string   "state"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "docker_cvms", force: true do |t|
     t.string   "container_name"
-    t.integer  "ispublid"
+    t.integer  "ispublic"
     t.float    "cpu"
     t.integer  "ram"
     t.string   "open_folder_path"
@@ -26,7 +32,10 @@ ActiveRecord::Schema.define(version: 20150411152756) do
     t.integer  "docker_users_id"
     t.integer  "docker_images_id"
     t.integer  "docker_hosts_id"
+    t.integer  "DockerCvmState_id"
   end
+
+  add_index "docker_cvms", ["DockerCvmState_id"], name: "index_docker_cvms_on_DockerCvmState_id", using: :btree
 
   create_table "docker_hosts", force: true do |t|
     t.string   "hostname"
@@ -44,12 +53,12 @@ ActiveRecord::Schema.define(version: 20150411152756) do
   create_table "docker_images", force: true do |t|
     t.string   "name"
     t.string   "description"
-    t.string   "baseimageid"
-    t.string   "userid"
     t.integer  "ispublic"
     t.integer  "isbaseimage"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.integer  "docker_images_id"
+    t.integer  "docker_users_id"
   end
 
   create_table "docker_users", force: true do |t|
@@ -65,5 +74,13 @@ ActiveRecord::Schema.define(version: 20150411152756) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "seed_migrations", force: true do |t|
+    t.string   "name",       null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "seed_migrations", ["name"], name: "index_seed_migrations_on_name", unique: true, using: :btree
 
 end

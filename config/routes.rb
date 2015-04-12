@@ -16,6 +16,10 @@ Rest::Application.routes.draw do
 
   namespace :api do
 	get 'getbaseimages' => 'imagesapi#show'
+	get 'getderivedimages/:id' => 'imagesapi#showderived'
+	get 'gethosts' => 'hostapi#showhosts'
+	get 'getusers' => 'userapi#showusers'
+	get 'createcvm/user/:userid/image/:imageid/cvmname/:cvmname/public/:ispublic/host/:hostid' => 'cvmapi#createcvm'
   end
   # Example resource route with options:
   #   resources :products do
