@@ -1,0 +1,19 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  container_name: MyString
+  ispublid: 1
+  cpu: 
+  ram: 1
+  open_folder_path: MyString
+  storage_required: 1
+  container_long_id: MyString
+
+two:
+  container_name: MyString
+  ispublid: 1
+  cpu: 
+  ram: 1
+  open_folder_path: MyString
+  storage_required: 1
+  container_long_id: MyString
