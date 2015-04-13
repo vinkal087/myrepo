@@ -15,6 +15,7 @@ ActiveRecord::Schema.define(version: 20150412212641) do
 
   create_table "docker_cvm_states", force: true do |t|
     t.string   "state"
+    t.string   "command"
     t.datetime "created_at"
     t.datetime "updated_at"
   end
@@ -74,5 +75,13 @@ ActiveRecord::Schema.define(version: 20150412212641) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "seed_migrations", force: true do |t|
+    t.string   "name",       null: false
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "seed_migrations", ["name"], name: "index_seed_migrations_on_name", unique: true, using: :btree
 
 end

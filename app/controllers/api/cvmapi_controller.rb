@@ -28,7 +28,7 @@ module Api
 		end
 
         def operatecvm
-            operation_name =DockerCvmState.find(params[:operation]).state
+            operation_name =DockerCvmState.find(params[:operation]).command
             res=nil
             cvmdetails = DockerCvm.find(params[:cvmid])
             hostdetails= DockerHosts.find(cvmdetails.docker_hosts_id)

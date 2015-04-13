@@ -21,6 +21,10 @@ Rest::Application.routes.draw do
 	get 'getusers' => 'userapi#showusers'
 	get 'createcvm/user/:userid/image/:imageid/cvmname/:cvmname/public/:ispublic/host/:hostid' => 'cvmapi#createcvm'
     get 'operatecvm/user/:userid/cvmid/:cvmid/operation/:operation' => 'cvmapi#operatecvm'
+    get 'adduser/username/:username/email/:email/isadmin/:isadmin/password/:password' => 'userapi#addusers'
+    get 'commit/cvmid/:cvmid/imagename/:imagename/description/:description/ispublic/:ispublic' => 'imagesapi#commitnew'
+    get 'addhosts/hostname/:name/ip/:ip/username/:username/password/:password/cpu/:cpu/ram/:ram/storage/:storage/hostos/:hostos' => 'hostapi#addhost'
+
   end
   # Example resource route with options:
   #   resources :products do
