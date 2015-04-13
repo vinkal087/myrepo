@@ -20,6 +20,7 @@ Rest::Application.routes.draw do
 	get 'gethosts' => 'hostapi#showhosts'
 	get 'getusers' => 'userapi#showusers'
 	get 'createcvm/user/:userid/image/:imageid/cvmname/:cvmname/public/:ispublic/host/:hostid' => 'cvmapi#createcvm'
+    get 'operatecvm/user/:userid/cvmid/:cvmid/operation/:operation' => 'cvmapi#operatecvm'
   end
   # Example resource route with options:
   #   resources :products do

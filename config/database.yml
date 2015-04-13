@@ -5,7 +5,7 @@
 #   gem 'sqlite3'
 development:
   adapter: mysql
-  database: mycloud_rails_apr
+  database: mycloud_rails_13apr
   username: ritika
   password: neha1988
   pool: 5

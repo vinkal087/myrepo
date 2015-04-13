@@ -28,17 +28,18 @@ module Api
 		end
 
         def operatecvm
-            operation = params[:operation]
-            name = params[:cvmid]
+            operation_name =DockerCvmState.find(params[:operation]).state
+            res=nil
+            cvmdetails = DockerCvm.find(params[:cvmid])
+            hostdetails= DockerHosts.find(cvmdetails.docker_hosts_id)
             Net::SSH.start(hostdetails.ip, hostdetails.username, :password => hostdetails.password) do |ssh|
-                docker_name = params[:userid] + "_" + name
-                res = ssh.exec!("docker #{operation} #{docker_name}")
+                docker_name = params[:userid] + "_" + params[:cvmid].to_s
+                res = ssh.exec!("docker #{operation_name} #{docker_name}")
                 ssh.close
              end
+            cvmdetails.docker_cvm_state_id = params[:operation].to_i
+            cvmdetails.save
             render json: res
-
-
-        end
-
-	end
+	    end
+     end
 end

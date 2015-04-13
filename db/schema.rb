@@ -32,10 +32,10 @@ ActiveRecord::Schema.define(version: 20150412212641) do
     t.integer  "docker_users_id"
     t.integer  "docker_images_id"
     t.integer  "docker_hosts_id"
-    t.integer  "DockerCvmState_id"
+    t.integer  "docker_cvm_state_id"
   end
 
-  add_index "docker_cvms", ["DockerCvmState_id"], name: "index_docker_cvms_on_DockerCvmState_id", using: :btree
+  add_index "docker_cvms", ["docker_cvm_state_id"], name: "index_docker_cvms_on_docker_cvm_state_id", using: :btree
 
   create_table "docker_hosts", force: true do |t|
     t.string   "hostname"
@@ -74,13 +74,5 @@ ActiveRecord::Schema.define(version: 20150412212641) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
-
-  create_table "seed_migrations", force: true do |t|
-    t.string   "name",       null: false
-    t.datetime "created_at"
-    t.datetime "updated_at"
-  end
-
-  add_index "seed_migrations", ["name"], name: "index_seed_migrations_on_name", unique: true, using: :btree
 
 end
