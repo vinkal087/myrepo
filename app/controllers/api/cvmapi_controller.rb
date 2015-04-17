@@ -3,6 +3,12 @@ require 'net/ssh'
 module Api
 	class CvmapiController < ApplicationController
   		respond_to :json
+        def showcvmall
+          cvm_all = DockerCvm.joins(:docker_cvm_state,:docker_users,:docker_hosts,:docker_images).select("docker_cvms.id,docker_cvms.container_long_id,docker_cvms.docker_users_id,docker_cvms.docker_hosts_id,docker_cvms.container_name,docker_cvms.ispublic,docker_cvms.cpu,docker_cvms.ram,docker_cvm_states.state,docker_users.username,docker_hosts.hostname,docker_images.name")
+          render json: cvm_all
+
+        end
+
 		def createcvm
 			image_exist = DockerCvm.where(:docker_users_id => params[:userid], :container_name => params[:cvmname]).count
 			render json: "A user cannot have two containers of same name" if image_exist ==1
@@ -14,6 +20,7 @@ module Api
             newcvm.docker_hosts_id = params[:hostid]
             newcvm.docker_images_id = params[:imageid]
             newcvm.ispublic = params[:ispublic]
+            newcvm.docker_cvm_state_id = 1
             newcvm.save
 
             imagedetails = DockerImages.find(params[:imageid])

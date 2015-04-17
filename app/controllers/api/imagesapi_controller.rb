@@ -10,10 +10,16 @@ module Api
   		end
 		
 		def showderived
-			images = DockerImages.where(:ispublic => 1, :isbaseimage => 0, :docker_images_id => params[:id]).select(:name, :description, :id)
+			images = DockerImages.where(:ispublic => 1, :isbaseimage => 0, :docker_images_id => params[:id]).select(:name, :description, :id,:docker_images_id)
 
 			render json: images
 		end
+
+    def showall
+      allimages = DockerImages.select(:name,:description,:id,:docker_images_id)
+      render json: allimages 
+     
+    end
 
         def commitnew
              newimage = DockerImages.new

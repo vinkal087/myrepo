@@ -1,9 +1,17 @@
 Rest::Application.routes.draw do
+  get "dashboard/images"
+  get "dashboard/cvms"
+  get "dashboard/users"
+  get "dashboard/index"
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
+ #resources :welcome do
+ #resources :comments, :only => [:create]
   # You can have the root of your site routed with "root"
-  # root 'welcome#index'
+  
+  root 'dashboard#index'
+
 
   # Example of regular route:
   #   get 'products/:id' => 'catalog#view'
@@ -19,11 +27,15 @@ Rest::Application.routes.draw do
 	get 'getderivedimages/:id' => 'imagesapi#showderived'
 	get 'gethosts' => 'hostapi#showhosts'
 	get 'getusers' => 'userapi#showusers'
-	get 'createcvm/user/:userid/image/:imageid/cvmname/:cvmname/public/:ispublic/host/:hostid' => 'cvmapi#createcvm'
+	get 'getcvms' => 'cvmapi#showcvmall'
+  get 'getallimages' =>'imagesapi#showall'
+    get 'getrunningcvms' => 'cvmapi#showrunningcvm'
+    get 'createcvm/user/:userid/image/:imageid/cvmname/:cvmname/public/:ispublic/host/:hostid' => 'cvmapi#createcvm'
     get 'operatecvm/user/:userid/cvmid/:cvmid/operation/:operation' => 'cvmapi#operatecvm'
     get 'adduser/username/:username/email/:email/isadmin/:isadmin/password/:password' => 'userapi#addusers'
     get 'commit/cvmid/:cvmid/imagename/:imagename/description/:description/ispublic/:ispublic' => 'imagesapi#commitnew'
     get 'addhosts/hostname/:name/ip/:ip/username/:username/password/:password/cpu/:cpu/ram/:ram/storage/:storage/hostos/:hostos' => 'hostapi#addhost'
+    post 'authenticate' => 'userapi#authenticate'
 
   end
   # Example resource route with options:
