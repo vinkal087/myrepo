@@ -9,15 +9,17 @@ module Api
       def addusers
          newuser = DockerUsers.new
          newuser.username = params[:username]
-         newuser.password = params[:password]
-         newuser.isadmin = params[:isadmin].nil? 0 : params[:isadmin]
+         newuser.password = params[:pwd]
+         newuser.isadmin = params[:isadmin].nil? ? 0 : params[:isadmin]
          newuser.email = params[:email]
          newuser.save
          render json: newuser
       end
 
       def authenticate
+        puts params
         cnt = DockerUsers.where(:username => params[:username] , :password => params[:password]).count
+        puts "cnt"+cnt.to_s
         render json: cnt>0
       end
 	end

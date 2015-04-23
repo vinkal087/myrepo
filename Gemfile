@@ -34,6 +34,10 @@ end
 
 gem 'seed_migrations'
 gem 'net-ssh'
+gem 'net-scp'
+gem 'haml-rails'
+gem 'rack-cors'
+#gem 'install_theme'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.1.2'
 
