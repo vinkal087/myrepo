@@ -18,9 +18,15 @@ module Api
 
       def authenticate
         puts params
-        cnt = DockerUsers.where(:username => params[:username] , :password => params[:password]).count
-        puts "cnt"+cnt.to_s
-        render json: cnt>0
+        docker_user = DockerUsers.where(:username => params[:username] , :password => params[:password])
+        hash = {}
+        if docker_user.count>0
+          hash[:AUTHENTICATION] = "SUCCESS"
+          hash[:ROLE] = docker_user.first.isadmin == 1 ? "ADMIN" : "USER"
+        else
+          hash[:AUTHENTICATION] = "ERROR"
+        end
+        render json: hash
       end
 	end
 end
