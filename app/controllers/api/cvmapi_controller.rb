@@ -95,8 +95,8 @@ module Api
 		end
 
     def writedockerfile(imagename,username,imageid)
-      puts APP_CONFIG['DOCKER_REGISTRY']
-      registry = "172.27.20.159:5002"
+      registry = APP_CONFIG['DOCKER_REGISTRY']
+      
       puts registry
       image = DockerImages.find(imageid)
       imagetag = image.tag.split('/')
@@ -126,26 +126,32 @@ module Api
             Net::SSH.start(hostdetails.ip, hostdetails.username, :password => hostdetails.password) do |ssh|
                 docker_name = cvmdetails.docker_users_id.to_s + "_" + params[:cvmid].to_s
                puts "docker #{operation_name} #{docker_name}"
+               if operation_name == 'kill' || operation_name == 'stop'
+                 res = ssh.exec!("docker commit #{cvmdetails.container_long_id} #{cvmdetails.container_name}")
+                 res = ssh.exec!("docker tag #{cvmdetails.container_name} #{APP_CONFIG['DOCKER_REGISTRY']}/#{cvmdetails.container_name}")
+                 res = ssh.exec!("docker push #{APP_CONFIG['DOCKER_REGISTRY']}/#{cvmdetails.container_name}")
+                 res = ssh.exec!("docker #{operation_name} #{docker_name}")
+                 newimg = DockerImages.new
+                 newimg.name = cvmdetails.container_name
+                 newimg.description = cvmdetails.container_name
+                 newimg.ispublic = cvmdetails.ispublic
+                 newimg.isbaseimage = 0
+                 newimg.docker_images_id = cvmdetails.docker_images_id 
+                 newimg.docker_users_id = cvmdetails.docker_users_id
+                 newimg.tag = "#{APP_CONFIG['DOCKER_REGISTRY']}/#{cvmdetails.container_name}"
+                 newimg.save
+                 puts res
+               else
                 res = ssh.exec!("docker #{operation_name} #{docker_name}")
                 puts res 
                 ssh.close
+               end
              end
             cvmdetails.docker_cvm_state_id = params[:operation].to_i
             cvmdetails.save
             render json: res
 	  end
     
-
-    def commitcvm
-        res = nil
-        cvmdetails = DockerCvm.find(params[:cvmid])
-        hostdetails= DockerHosts.find(cvmdetails.docker_hosts_id)
-        Net::SSH.start(hostdetails.ip, hostdetails.username, :password => hostdetails.password) do |ssh|
-          docker_name = cvmdetails.docker_users_id.to_s + "_" + params[:cvmid].to_s
-          image_name = cvm_details.docker_users_id.to_s + "_" + params[:imagename]
-          res = ssh.exec!("docker #{docker_name} #{imagename}")
-          ssh.close
-        end
-    end   
+    
   end
 end
