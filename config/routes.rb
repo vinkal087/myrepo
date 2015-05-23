@@ -38,6 +38,7 @@ Rest::Application.routes.draw do
     get 'commit/cvmid/:cvmid/imagename/:imagename/description/:description/ispublic/:ispublic' => 'imagesapi#commitnew'
     post 'addhost/' => 'hostapi#addhost'
     post 'authenticate' => 'userapi#authenticate'
+    get 'hostdetails/:id' => 'hostapi#hostdetails'
 
   end
   # Example resource route with options:

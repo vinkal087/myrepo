@@ -30,5 +30,10 @@ module Api
         render json: host.update(params[:values])
     end
 
+    def hostdetails
+        host = DockerHosts.find_by(:id => params[:id])
+        render json: host
+    end
+
   end
 end
