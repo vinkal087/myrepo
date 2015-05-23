@@ -7,7 +7,13 @@ module Api
     
 
     def showcvmall
-          cvm_all = DockerCvm.joins(:docker_cvm_state,:docker_users,:docker_hosts,:docker_images).select("docker_cvms.id,docker_cvms.container_long_id,docker_cvms.docker_users_id,docker_cvms.docker_hosts_id,docker_cvms.container_name,docker_cvms.ispublic,docker_cvms.cpu,docker_cvms.ram,docker_cvm_states.state,docker_users.username,docker_hosts.hostname,docker_hosts.ip,docker_images.name")
+          user_details = DockerUsers.find_by(id: params[:user_id])
+          cvm_all = nil
+          if user_details.isadmin ==1
+            cvm_all = DockerCvm.joins(:docker_cvm_state,:docker_users,:docker_hosts,:docker_images).select("docker_cvms.id,docker_cvms.container_long_id,docker_cvms.docker_users_id,docker_cvms.docker_hosts_id,docker_cvms.container_name,docker_cvms.ispublic,docker_cvms.cpu,docker_cvms.ram,docker_cvm_states.state,docker_users.username,docker_hosts.hostname,docker_hosts.ip,docker_images.name")
+          else
+            cvm_all = DockerCvm.joins(:docker_cvm_state,:docker_users,:docker_hosts,:docker_images).select("docker_cvms.id,docker_cvms.container_long_id,docker_cvms.docker_users_id,docker_cvms.docker_hosts_id,docker_cvms.container_name,docker_cvms.ispublic,docker_cvms.cpu,docker_cvms.ram,docker_cvm_states.state,docker_users.username,docker_hosts.hostname,docker_hosts.ip,docker_images.name").where(:docker_users_id => user_details.id)
+          end
           render json: cvm_all
 
     end

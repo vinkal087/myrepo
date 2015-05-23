@@ -23,6 +23,7 @@ module Api
         if docker_user.count>0
           hash[:AUTHENTICATION] = "SUCCESS"
           hash[:ROLE] = docker_user.first.isadmin == 1 ? "ADMIN" : "USER"
+          hash[:USER_ID] = docker_user.first.id
         else
           hash[:AUTHENTICATION] = "ERROR"
         end

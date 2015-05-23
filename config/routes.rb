@@ -27,7 +27,7 @@ Rest::Application.routes.draw do
 	get 'getderivedimages/:id' => 'imagesapi#showderived'
 	get 'gethosts' => 'hostapi#showhosts'
 	get 'getusers' => 'userapi#showusers'
-	get 'getcvms' => 'cvmapi#showcvmall'
+	get 'getcvms/:user_id' => 'cvmapi#showcvmall'
   get 'getallimages' =>'imagesapi#showall'
     get 'getrunningcvms' => 'cvmapi#showrunningcvm'
     get 'cvmdetails/:cvmid' => 'cvmapi#cvmdetails'
