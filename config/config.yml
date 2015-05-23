@@ -1,0 +1,12 @@
+
+common: &common
+    DOCKER_REGISTRY: 172.27.20.159:5002
+development:
+    <<: *common
+
+test:
+    <<: *common
+
+production:
+    <<: *common
+

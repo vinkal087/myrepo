@@ -11,7 +11,14 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150412212641) do
+ActiveRecord::Schema.define(version: 20150522224403) do
+
+  create_table "docker_cores", force: true do |t|
+    t.integer  "core_enum"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+    t.integer  "docker_cvms_id"
+  end
 
   create_table "docker_cvm_states", force: true do |t|
     t.string   "state"
@@ -22,7 +29,7 @@ ActiveRecord::Schema.define(version: 20150412212641) do
 
   create_table "docker_cvms", force: true do |t|
     t.string   "container_name"
-    t.integer  "ispublic"
+    t.integer  "ispublic",             default: 1
     t.float    "cpu"
     t.integer  "ram"
     t.string   "open_folder_path"
@@ -33,10 +40,18 @@ ActiveRecord::Schema.define(version: 20150412212641) do
     t.integer  "docker_users_id"
     t.integer  "docker_images_id"
     t.integer  "docker_hosts_id"
-    t.integer  "docker_cvm_state_id"
+    t.integer  "docker_cvm_state_id",  default: 1
+    t.float    "cpu_avg"
+    t.float    "cpu_std_deviation"
+    t.float    "memory_avg"
+    t.float    "memory_std_deviation"
+    t.integer  "count"
   end
 
   add_index "docker_cvms", ["docker_cvm_state_id"], name: "index_docker_cvms_on_docker_cvm_state_id", using: :btree
+  add_index "docker_cvms", ["docker_hosts_id"], name: "FK_docker_cvms_docker_hosts", using: :btree
+  add_index "docker_cvms", ["docker_images_id"], name: "FK_docker_cvms_docker_images", using: :btree
+  add_index "docker_cvms", ["docker_users_id"], name: "FK_docker_cvms_docker_users", using: :btree
 
   create_table "docker_hosts", force: true do |t|
     t.string   "hostname"
@@ -49,6 +64,7 @@ ActiveRecord::Schema.define(version: 20150412212641) do
     t.string   "host_os"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "active"
   end
 
   create_table "docker_images", force: true do |t|
@@ -60,6 +76,7 @@ ActiveRecord::Schema.define(version: 20150412212641) do
     t.datetime "updated_at"
     t.integer  "docker_images_id"
     t.integer  "docker_users_id"
+    t.string   "tag"
   end
 
   create_table "docker_users", force: true do |t|

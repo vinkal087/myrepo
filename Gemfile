@@ -37,6 +37,8 @@ gem 'net-ssh'
 gem 'net-scp'
 gem 'haml-rails'
 gem 'rack-cors'
+gem 'httparty'
+gem 'influxdb'
 #gem 'install_theme'
 # Use ActiveModel has_secure_password
 # gem 'bcrypt-ruby', '~> 3.1.2'
