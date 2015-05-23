@@ -36,7 +36,7 @@ Rest::Application.routes.draw do
     get 'operatecvm/:cvmid/:operation' => 'cvmapi#operatecvm'
     post 'adduser' => 'userapi#addusers'
     get 'commit/cvmid/:cvmid/imagename/:imagename/description/:description/ispublic/:ispublic' => 'imagesapi#commitnew'
-    get 'addhosts/hostname/:name/ip/:ip/username/:username/password/:password/cpu/:cpu/ram/:ram/storage/:storage/hostos/:hostos' => 'hostapi#addhost'
+    post 'addhost/' => 'hostapi#addhost'
     post 'authenticate' => 'userapi#authenticate'
 
   end
