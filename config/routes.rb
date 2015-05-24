@@ -40,6 +40,7 @@ Rest::Application.routes.draw do
     post 'authenticate' => 'userapi#authenticate'
     get 'hostdetails/:id' => 'hostapi#hostdetails'
     post 'edithost/:id' => 'hostapi#edithost'
+    get 'getactivehosts' => 'hostapi#showhosts_active'
 
   end
   # Example resource route with options:
