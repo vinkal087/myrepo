@@ -36,27 +36,29 @@ class DockerCvm < ActiveRecord::Base
     while true
       cvms = DockerCvm.all
       count = cvms.count
-
+       
       threads = (1..count).map do |i|
           Thread.new(i) do |i|
               
-                cvm = cvms[i-1]
-                puts cvm
-                host = DockerHosts.find_by(id: cvm.docker_hosts_id)
-                cvmname = "#{cvm.docker_users_id}_#{cvm.id}"
-                puts "#{cvmname}"
-                puts "http://#{host.ip}:3000/api/stats/#{iteration}/#{cvmname}"
+                #cvm = cvms[i]
+                cvmid = cvms[i-1].id
+                cvmname = "#{cvms[i-1].docker_users_id}_#{cvmid}"
+                host = DockerHosts.find_by(cvmid)
+                #cvmname = "#{cvm.docker_users_id}_#{cvm.id}"
+                
                 res = HTTParty.get("http://#{host.ip}:3000/api/stats/#{iteration}/#{cvmname}")  
                 stats = JSON.parse(res.body)
+                
+
                 memused_in_mb = 0
                 memtotal_in_mb = 0
                 stats['memvalues'].each  do |str|
                    values = str.split('/')
                    memused_in_mb += format_mem(values[0]).to_f
                    memtotal_in_mb += format_mem(values[1]).to_f 
-                  end
-                x +=1
-                puts x 
+                 end
+               
+                puts "after data" 
                 c = stats['count'].to_i
                 cpu = stats['cpupercent']
                 mem = stats['mempercent']
@@ -68,12 +70,16 @@ class DockerCvm < ActiveRecord::Base
                 data[:memtotal_in_mb] = 1.0*(memtotal_in_mb/c).to_f
                 data[:cpu] = cpu.max.to_f
                 data[:mem] = mem.max.to_f
-                puts data
-                connect_to_influx.write_point(cvmname, data)
+                #puts data
+                connect.write_point(cvmname, data)
                 
               end
             
           end
+
+        threads.each {|t| t.join}
+        threads.each {|t| t.kill}
+        
       sleep sleeptime
     end
 
@@ -190,6 +196,7 @@ class DockerCvm < ActiveRecord::Base
                     
                 end
                 cpu_stats['cpu_all'] = 1.0 * (cpu_all.sum.to_f/iteration)
+                puts cpu_stats
                 connect.write_point("#{hostname}_cpu_#{hostip}",cpu_stats)
                 mem_stats = {}
                 free =[]
@@ -204,10 +211,13 @@ class DockerCvm < ActiveRecord::Base
                 mem_stats['memused']=1.0*(used.sum.to_f/iteration)
                 mem_stats['memfree']=1.0*(free.sum.to_f/iteration)
                 mem_stats['memused_percent']=1.0*(percent.sum.to_f/iteration)
+                puts mem_stats
                 connect.write_point("#{hostname}_mem_#{hostip}",mem_stats)
-                end
+              end
               
             end
+    threads.each {|t| t.join}
+    threads.each {|t| t.kill}
     sleep sleeptime
     end
 
