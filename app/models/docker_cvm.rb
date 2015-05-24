@@ -14,14 +14,14 @@ class DockerCvm < ActiveRecord::Base
     x.to_s
   end
 
-  def self.connect_to_influx
+  def connect_to_influx
     username = 'ritika'
     password = 'ritika'
     database = 'stats'
     influxdb = InfluxDB::Client.new database, :username => username, :password => password
   end
   
-  def self.format_mem(memory)
+  def format_mem(memory)
     x = memory
     value = x[0..-4].to_f
       if memory[-3]=='K'
@@ -32,35 +32,51 @@ class DockerCvm < ActiveRecord::Base
     return value*1.0
   end  
 
-  def collect_data
-    cvms = DockerCvm.all
-    cvms.each do  |cvm|
-      host = DockerHosts.find_by(id: cvm.docker_hosts_id)
-      res = HTTParty.get("http://#{host.ip}:3000/api/stats/3/#{cvm.container_long_id.chomp!}")  
-      stats = JSON.parse(res.body)
-      memused_in_mb = 0
-      memtotal_in_mb = 0
-      stats['memvalues'].each  do |str|
-         values = str.split('/')
-         memused_in_mb += format_mem(values[0]).to_f
-         memtotal_in_mb += format_mem(values[1]).to_f 
-        end
-      puts memtotal_in_mb
-      c = stats['count'].to_i
-      puts c
-      puts 1.0*(memused_in_mb/c)
-      puts 1.0*(memtotal_in_mb/c)
-      data = {}
-      data[:time] = Time.now.to_i
-      data[:cpu] = stats['avgcpu']
-      data[:mem] = stats['avgmem']
-      data[:memused_in_mb] =1.0*(memused_in_mb/c).to_f
-      data[:memtotal_in_mb] = 1.0*(memtotal_in_mb/c).to_f
-      cvmname = "#{cvm.docker_users_id}_#{cvm.id}"
-      puts cvmname
-      connect_to_influx.write_point(cvmname, data)
-      
+  def cvm_stats_collect(sleeptime,iteration)
+    while true
+      cvms = DockerCvm.all
+      count = cvms.count
+
+      threads = (1..count).map do |i|
+          Thread.new(i) do |i|
+              
+                cvm = cvms[i-1]
+                puts cvm
+                host = DockerHosts.find_by(id: cvm.docker_hosts_id)
+                cvmname = "#{cvm.docker_users_id}_#{cvm.id}"
+                puts "#{cvmname}"
+                puts "http://#{host.ip}:3000/api/stats/#{iteration}/#{cvmname}"
+                res = HTTParty.get("http://#{host.ip}:3000/api/stats/#{iteration}/#{cvmname}")  
+                stats = JSON.parse(res.body)
+                memused_in_mb = 0
+                memtotal_in_mb = 0
+                stats['memvalues'].each  do |str|
+                   values = str.split('/')
+                   memused_in_mb += format_mem(values[0]).to_f
+                   memtotal_in_mb += format_mem(values[1]).to_f 
+                  end
+                x +=1
+                puts x 
+                c = stats['count'].to_i
+                cpu = stats['cpupercent']
+                mem = stats['mempercent']
+                
+                data = {}
+                data[:time] = Time.now.to_i
+                
+                data[:memused_in_mb] =1.0*(memused_in_mb/c).to_f
+                data[:memtotal_in_mb] = 1.0*(memtotal_in_mb/c).to_f
+                data[:cpu] = cpu.max.to_f
+                data[:mem] = mem.max.to_f
+                puts data
+                connect_to_influx.write_point(cvmname, data)
+                
+              end
+            
+          end
+      sleep sleeptime
     end
+
   end
 
   def self.exp_data(time,cvmname)
@@ -126,64 +142,72 @@ class DockerCvm < ActiveRecord::Base
     database = 'stats'
     influxdb = InfluxDB::Client.new database, :username => username, :password => password
   end
-
+  
 
   def host_stats_collect(sleeptime,interval,iteration)
-    hosts = DockerHosts.all
+   
     while true
-    hosts.each do |host|
-      hostip = host.ip
-      hostname = host.hostname
-      mem_res = HTTParty.get("http://#{hostip}:3000/api/memory/#{interval}/#{iteration}") 
-      cpu_res = HTTParty.get("http://#{hostip}:3000/api/cpu/#{interval}/#{iteration}") 
-      x = JSON.parse(mem_res.body)
-      y = JSON.parse(cpu_res.body)
-      cpu_data = y['sysstat']['hosts'][0]['statistics']
-      mem_data = x['sysstat']['hosts'][0]['statistics']
-      cores = y['sysstat']['hosts'][0]['number-of-cpus']
-      cpu_stats={}
-      cpu_all=[]
-      cpu_cores_temp={}
-      for i in 0..cores-1
-          cpu_cores_temp["core_#{i}"]=[]
-          cpu_stats["core_#{i}"]=0
-      end
-      cpu_data.each do |data|
-        a = data['cpu-load'][0]['user'].to_f + data['cpu-load'][0]['nice'].to_f
-            + data['cpu-load'][0]['system'].to_f + data['cpu-load'][0]['iowait'].to_f 
-            + data['cpu-load'][0]['steal'].to_f
-        cpu_all.push(a)
-        t=0
-        for i in 1..cores
-          t = data['cpu-load'][i]['user'].to_f + data['cpu-load'][i]['nice'].to_f
-            + data['cpu-load'][i]['system'].to_f + data['cpu-load'][i]['iowait'].to_f 
-            + data['cpu-load'][i]['steal'].to_f
-          
-          cpu_cores_temp["core_#{i-1}"].push(t)
-        end
-         #puts cpu_cores_temp
-      end
-      for i in 0..cores-1
-          cpu_stats["core_#{i}"]= 1.0 * (cpu_cores_temp["core_#{i}"].sum.to_f/iteration)
-          
-      end
-      cpu_stats['cpu_all'] = 1.0 * (cpu_all.sum.to_f/iteration)
-      connect.write_point("#{hostname}_cpu_#{hostip}",cpu_stats)
-      mem_stats = {}
-      free =[]
-      used =[]
-      percent =[]
-      
-      mem_data.each do |data|
-         free.push(data['memory']['memfree'].to_f)
-         used.push(data['memory']['memused'].to_f)
-         percent.push(data['memory']['memused-percent'].to_f)
-      end
-      mem_stats['memused']=1.0*(used.sum.to_f/iteration)
-      mem_stats['memfree']=1.0*(free.sum.to_f/iteration)
-      mem_stats['memused_percent']=1.0*(percent.sum.to_f/iteration)
-      connect.write_point("#{hostname}_mem_#{hostip}",mem_stats)
-      end
+    hosts = DockerHosts.all
+    puts hosts
+    count = hosts.count
+        threads = (1..count).map do |i|
+          Thread.new(i) do |i|
+            
+                hostip = hosts[i-1].ip
+                hostname = hosts[i-1].hostname
+                puts hostip
+                mem_res = HTTParty.get("http://#{hostip}:3000/api/memory/#{interval}/#{iteration}") 
+                cpu_res = HTTParty.get("http://#{hostip}:3000/api/cpu/#{interval}/#{iteration}") 
+                x = JSON.parse(mem_res.body)
+                y = JSON.parse(cpu_res.body)
+                cpu_data = y['sysstat']['hosts'][0]['statistics']
+                mem_data = x['sysstat']['hosts'][0]['statistics']
+                cores = y['sysstat']['hosts'][0]['number-of-cpus']
+                cpu_stats={}
+                cpu_all=[]
+                cpu_cores_temp={}
+                for i in 0..cores-1
+                    cpu_cores_temp["core_#{i}"]=[]
+                    cpu_stats["core_#{i}"]=0
+                end
+                cpu_data.each do |data|
+                  a = data['cpu-load'][0]['user'].to_f + data['cpu-load'][0]['nice'].to_f
+                      + data['cpu-load'][0]['system'].to_f + data['cpu-load'][0]['iowait'].to_f 
+                      + data['cpu-load'][0]['steal'].to_f
+                  cpu_all.push(a)
+                  t=0
+                  for i in 1..cores
+                    t = data['cpu-load'][i]['user'].to_f + data['cpu-load'][i]['nice'].to_f
+                      + data['cpu-load'][i]['system'].to_f + data['cpu-load'][i]['iowait'].to_f 
+                      + data['cpu-load'][i]['steal'].to_f
+                    
+                    cpu_cores_temp["core_#{i-1}"].push(t)
+                  end
+                   #puts cpu_cores_temp
+                end
+                for i in 0..cores-1
+                    cpu_stats["core_#{i}"]= 1.0 * (cpu_cores_temp["core_#{i}"].sum.to_f/iteration)
+                    
+                end
+                cpu_stats['cpu_all'] = 1.0 * (cpu_all.sum.to_f/iteration)
+                connect.write_point("#{hostname}_cpu_#{hostip}",cpu_stats)
+                mem_stats = {}
+                free =[]
+                used =[]
+                percent =[]
+                
+                mem_data.each do |data|
+                   free.push(data['memory']['memfree'].to_f)
+                   used.push(data['memory']['memused'].to_f)
+                   percent.push(data['memory']['memused-percent'].to_f)
+                end
+                mem_stats['memused']=1.0*(used.sum.to_f/iteration)
+                mem_stats['memfree']=1.0*(free.sum.to_f/iteration)
+                mem_stats['memused_percent']=1.0*(percent.sum.to_f/iteration)
+                connect.write_point("#{hostname}_mem_#{hostip}",mem_stats)
+                end
+              
+            end
     sleep sleeptime
     end
 
