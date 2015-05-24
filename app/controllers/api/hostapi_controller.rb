@@ -27,12 +27,18 @@ module Api
 
     def edithost
         host = DockerHosts.find_by(:id => params[:id])
-        render json: host.update(params[:values])
+        render json: host.update(edithost_params)
     end
 
     def hostdetails
         host = DockerHosts.find_by(:id => params[:id])
         render json: host
+    end
+
+    private
+
+    def edithost_params
+        params[:values].permit(:username, :ram, :password, :host_os, :storage, :ip, :active, :cpu, :hostname)
     end
 
   end
