@@ -36,17 +36,25 @@ class DockerCvm < ActiveRecord::Base
     while true
       cvms = DockerCvm.all
       count = cvms.count
-       
+      ip=[]
+      for i in 0..count-1
+         host = DockerHosts.find_by(cvms[i].id)
+         puts host.ip
+         ip.push(host.ip)
+      end
+      puts cvms 
       threads = (1..count).map do |i|
           Thread.new(i) do |i|
               
                 #cvm = cvms[i]
                 cvmid = cvms[i-1].id
                 cvmname = "#{cvms[i-1].docker_users_id}_#{cvmid}"
-                host = DockerHosts.find_by(cvmid)
+                puts cvmname
+               
+                #host = DockerHosts.find_by(cvmid)
                 #cvmname = "#{cvm.docker_users_id}_#{cvm.id}"
                 
-                res = HTTParty.get("http://#{host.ip}:3000/api/stats/#{iteration}/#{cvmname}")  
+                res = HTTParty.get("http://#{ip[i-1]}:3000/api/stats/#{iteration}/#{cvmname}")  
                 stats = JSON.parse(res.body)
                 
 
