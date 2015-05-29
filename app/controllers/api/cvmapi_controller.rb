@@ -33,6 +33,10 @@ module Api
     end
 
 
+    def schedule_cvm(number_of_cores, ram, storage, expected_cpu_usage, expected_ram_usage host_details, core_details_array)
+      
+    end
+
 		def createcvm
 			image_exist = DockerCvm.where(:docker_users_id => params[:userid], :container_name => params[:cvmname]).count
 			render json: "A user cannot have two containers of same name" if image_exist ==1

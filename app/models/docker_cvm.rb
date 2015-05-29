@@ -34,7 +34,8 @@ class DockerCvm < ActiveRecord::Base
 
   def cvm_stats_collect(sleeptime,iteration)
     while true
-      cvms = DockerCvm.all
+      runnint_state = DockerCvmState.find_by(:state => "RUNNING")
+      cvms = DockerCvm.where(:docker_cvm_state_id =>  runnint_state.id)
       count = cvms.count
       ip=[]
       for i in 0..count-1
@@ -45,19 +46,10 @@ class DockerCvm < ActiveRecord::Base
       puts cvms 
       threads = (1..count).map do |i|
           Thread.new(i) do |i|
-              
-                #cvm = cvms[i]
                 cvmid = cvms[i-1].id
-                cvmname = "#{cvms[i-1].docker_users_id}_#{cvmid}"
-                puts cvmname
-               
-                #host = DockerHosts.find_by(cvmid)
-                #cvmname = "#{cvm.docker_users_id}_#{cvm.id}"
-                
+                cvmname = "#{cvms[i-1].docker_users_id}_#{cvmid}"                
                 res = HTTParty.get("http://#{ip[i-1]}:3000/api/stats/#{iteration}/#{cvmname}")  
                 stats = JSON.parse(res.body)
-                
-
                 memused_in_mb = 0
                 memtotal_in_mb = 0
                 stats['memvalues'].each  do |str|
@@ -65,8 +57,6 @@ class DockerCvm < ActiveRecord::Base
                    memused_in_mb += format_mem(values[0]).to_f
                    memtotal_in_mb += format_mem(values[1]).to_f 
                  end
-               
-                puts "after data" 
                 c = stats['count'].to_i
                 cpu = stats['cpupercent']
                 mem = stats['mempercent']
@@ -78,9 +68,7 @@ class DockerCvm < ActiveRecord::Base
                 data[:memtotal_in_mb] = 1.0*(memtotal_in_mb/c).to_f
                 data[:cpu] = cpu.max.to_f
                 data[:mem] = mem.max.to_f
-                #puts data
-                connect.write_point(cvmname, data)
-                
+                connect.write_point(cvmname, data)   
               end
             
           end
@@ -161,7 +149,7 @@ class DockerCvm < ActiveRecord::Base
   def host_stats_collect(sleeptime,interval,iteration)
    
     while true
-    hosts = DockerHosts.all
+    hosts = DockerHosts.where(:active => 1)
     puts hosts
     count = hosts.count
         threads = (1..count).map do |i|
