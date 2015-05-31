@@ -14,6 +14,10 @@ module Api
       else
         cvm_all = DockerCvm.joins(:docker_cvm_state,:docker_users,:docker_hosts,:docker_images).select("docker_cvms.id,docker_cvms.container_long_id,docker_cvms.docker_users_id,docker_cvms.docker_hosts_id,docker_cvms.container_name,docker_cvms.ispublic,docker_cvms.cpu,docker_cvms.ram,docker_cvm_states.state,docker_users.username,docker_hosts.hostname,docker_hosts.ip,docker_images.name").where(:docker_users_id => user_details.id)
       end
+      cvm_all.each do |cvm_details|
+        cvm_details.shellinabox_portval = cvm_details.shellinabox_port
+        cvm_details.ssh_portval = cvm_details.ssh_port
+      end
       render json: cvm_all
     end
     
@@ -55,12 +59,10 @@ module Api
 
       Net::SSH.start(hostdetails.ip, hostdetails.username, :password => hostdetails.password) do |ssh,success|
          docker_name = params[:userid] + "_" + newcvm.id.to_s
-         port =  25000 + newcvm.id
-         port = port.to_s
+         port =  newcvm.ssh_port
 
-         
          puts ssh.exec!("docker build -t #{userdetails.username}_#{newcvm.id} . ")
-         shellinabox_port = (25000 + newcvm.id + 1).to_s
+         shellinabox_port = newcvm.shellinabox_port
          
          if(params[:memory] == "" && params[:cpu])
            memory = 16000  
@@ -72,6 +74,7 @@ module Api
         command = "docker run -itd --name #{docker_name} -p #{port}:22 --restart=on-failure:5  -p #{shellinabox_port}:4200 -c #{cpu}  #{userdetails.username}_#{newcvm.id}  /bin/bash "
          res = ssh.exec!(command)
          ssh.exec!("timeout 2 docker exec  #{docker_name} service shellinabox start")
+         ssh.exec!("timeout 2 docker exec  #{docker_name} service ssh start")
          ssh.close
       end          
       res = res.chomp!

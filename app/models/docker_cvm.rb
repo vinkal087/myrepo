@@ -2,15 +2,16 @@
  require 'json'
  require 'influxdb'
 class DockerCvm < ActiveRecord::Base
+  attr_accessor :shellinabox_portval, :ssh_portval
   #belongs_to :docker_user, :docker_image, :docker_host, :docker_cvm_state
  
   def shellinabox_port
-    x = self.id + 25000 +1
+    x = 2*self.id + 25000 +1
     x.to_s
   end
 
   def ssh_port
-    x = self.id + 25000
+    x = 2*self.id + 25000
     x.to_s
   end
 
