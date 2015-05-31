@@ -35,11 +35,19 @@ module Api
         render json: host
     end
 
+    def get_latest_data_from_influx
+        host_details = DockerHosts.find_by(:id => params[:id])
+        data = host_details.get_latest_data_from_influx
+        render json: data
+    end
+
     private
 
     def edithost_params
         params[:values].permit(:username, :ram, :password, :host_os, :storage, :ip, :active, :cpu, :hostname)
     end
+
+
 
   end
 end

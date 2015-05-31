@@ -37,9 +37,7 @@ module Api
     end
 
 
-    def schedule_cvm(number_of_cores, ram, storage, expected_cpu_usage, expected_ram_usage host_details, core_details_array)
-      
-    end
+   
 
 		def createcvm
 			image_exist = DockerCvm.where(:docker_users_id => params[:userid], :container_name => params[:cvmname]).count
@@ -136,7 +134,7 @@ module Api
           res = ssh.exec!("docker push #{APP_CONFIG['DOCKER_REGISTRY']}/#{cvmdetails.container_name}")
           res = ssh.exec!("docker #{operation_name} #{docker_name}")
           newimg = DockerImages.new
-          newimg.name = cvmdetails.container_name
+          newimg.name = cvmdetails.container_name 
           newimg.description = cvmdetails.container_name
           newimg.ispublic = cvmdetails.ispublic
           newimg.isbaseimage = 0
@@ -144,6 +142,11 @@ module Api
           newimg.docker_users_id = cvmdetails.docker_users_id
           newimg.tag = "#{APP_CONFIG['DOCKER_REGISTRY']}/#{cvmdetails.container_name}"
           newimg.save
+        elsif operation_name == "start"
+          puts "in start"
+          res = ssh.exec!("docker #{operation_name} #{docker_name}")
+          ssh.exec!("timeout 2 docker exec  #{docker_name} service shellinabox start")
+          ssh.exec!("timeout 2 docker exec  #{docker_name} service ssh start")         
         else
           res = ssh.exec!("docker #{operation_name} #{docker_name}")
           ssh.close

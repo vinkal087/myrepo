@@ -41,6 +41,7 @@ Rest::Application.routes.draw do
     get 'hostdetails/:id' => 'hostapi#hostdetails'
     post 'edithost/:id' => 'hostapi#edithost'
     get 'getactivehosts' => 'hostapi#showhosts_active'
+    get 'lastinfluxdata/:id' => 'hostapi#get_latest_data_from_influx'
 
   end
   # Example resource route with options:
