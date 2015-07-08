@@ -5,6 +5,19 @@ module Api
 	class CvmapiController < ApplicationController
   		respond_to :json
     
+    def get_latest_cvm_data_from_influx
+        cvm_details = DockerCvm.find_by(:id => params[:id])
+        data = cvm_details.get_latest_cvm_data_from_influx
+        render json: data
+    end
+
+  def get_latest_cvm_data_from_influx_mem
+        cvm_details = DockerCvm.find_by(:id => params[:id])
+        data = cvm_details.get_latest_cvm_data_from_influx
+        render json: data
+    end
+
+   
 
     def showcvmall
       user_details = DockerUsers.find_by(id: params[:user_id])
@@ -49,23 +62,30 @@ module Api
       newcvm.docker_users_id = params[:userid]
       newcvm.docker_hosts_id = params[:hostid]
       newcvm.docker_images_id = params[:imageid]
+      newcvm.cpu = params[:cpu]
+      newcvm.ram = params[:memory]
       newcvm.ispublic = params[:ispublic]
       newcvm.docker_cvm_state_id = 1
       newcvm.save
       imagedetails = DockerImages.find(params[:imageid])
       userdetails = DockerUsers.find(params[:userid])
       writedockerfile(imagedetails.name, userdetails.username,params[:imageid])
+     
       Net::SSH.start(hostdetails.ip, hostdetails.username, :password => hostdetails.password) do |session|
-        session.scp.upload!("/tmp/Dockerfile", "/home/ritika")
+        session.scp.upload!("/tmp/Dockerfile", "/home/#{hostdetails.username}/docker_files/")
       end
 
       Net::SSH.start(hostdetails.ip, hostdetails.username, :password => hostdetails.password) do |ssh,success|
          docker_name = params[:userid] + "_" + newcvm.id.to_s
          port =  newcvm.ssh_port
-
-         puts ssh.exec!("docker build -t #{userdetails.username}_#{newcvm.id} . ")
-         shellinabox_port = newcvm.shellinabox_port
+         puts port
+         registry = APP_CONFIG['DOCKER_REGISTRY']
+         puts "docker build -t #{registry}/#{userdetails.username}_#{newcvm.id} . "
          
+         
+         puts ssh.exec!("cd docker_files/ && docker build -t #{registry}/#{userdetails.username}_#{newcvm.id} . ")
+         shellinabox_port = newcvm.shellinabox_port
+         puts shellinabox_port
          if(params[:memory] == "" && params[:cpu])
            memory = 16000  
            cpu = 8
@@ -73,8 +93,10 @@ module Api
            memory = params[:memory]
            cpu = 8
          end
-        command = "docker run -itd --name #{docker_name} -p #{port}:22 --restart=on-failure:5  -p #{shellinabox_port}:4200 -c #{cpu}  #{userdetails.username}_#{newcvm.id}  /bin/bash "
+        command = "docker run -itd --name #{docker_name} -p #{port}:22  --restart=on-failure:5  -p #{shellinabox_port}:4200 -c #{cpu} -m #{memory}m  #{registry}/#{userdetails.username}_#{newcvm.id}  /bin/bash "
+         puts command
          res = ssh.exec!(command)
+         puts "after run"
          ssh.exec!("timeout 2 docker exec  #{docker_name} service shellinabox start")
          ssh.exec!("timeout 2 docker exec  #{docker_name} service ssh start")
          ssh.close

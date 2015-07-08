@@ -2,22 +2,36 @@ require 'httparty'
 require 'json'
 require 'influxdb'
 class DockerHosts < ActiveRecord::Base
-  def connect
+  def self.connect
     username = 'ritika'
     password = 'ritika'
     database = 'stats'
     influxdb = InfluxDB::Client.new database, :username => username, :password => password
   end
+  def connect2
+    username = 'ritika'
+    password = 'ritika'
+    database = 'stats'
+    influxdb = InfluxDB::Client.new database, :username => username, :password => password
+  end
+
   def get_latest_data_from_influx
     influx_table = "#{self.hostname}_cpu_#{self.ip}"
-    x = connect.query "select * from #{influx_table} where time > now() -1m"
+    x = connect2.query "select * from #{influx_table} where time > now() -2m"
+    x = x[influx_table]
+    puts x
+    return x[x.count-1]
+  end
+  def get_latest_data_from_influx_mem
+    influx_table = "#{self.hostname}_mem_#{self.ip}"
+    x = connect2.query "select * from #{influx_table} where time > now() -2m"
     x = x[influx_table]
     puts x
     return x[x.count-1]
   end
   
 
-  def host_stats_collect(sleeptime,interval,iteration)
+  def self.host_stats_collect(sleeptime,interval,iteration)
    
     while true
     hosts = DockerHosts.where(:active => 1)

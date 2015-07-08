@@ -21,8 +21,18 @@ class DockerCvm < ActiveRecord::Base
     database = 'stats'
     influxdb = InfluxDB::Client.new database, :username => username, :password => password
   end
+
+  def get_latest_cvm_data_from_influx
+    influx_table = "#{self.docker_users_id}_#{self.id}"
+    x = connect_to_influx.query "select * from #{influx_table} where time > now() -2m"
+    x = x[influx_table]
+    puts x
+    return x[x.count-1]
+  end
+
   
-  def format_mem(memory)
+  
+  def self.format_mem(memory)
     x = memory
     value = x[0..-4].to_f
       if memory[-3]=='K'
@@ -33,24 +43,33 @@ class DockerCvm < ActiveRecord::Base
     return value*1.0
   end  
 
-  def cvm_stats_collect(sleeptime,iteration)
+  def self.cvm_stats_collect(sleeptime,iteration)
     while true
       runnint_state = DockerCvmState.find_by(:state => "RUNNING")
       cvms = DockerCvm.where(:docker_cvm_state_id =>  runnint_state.id)
       count = cvms.count
       ip=[]
       for i in 0..count-1
-         host = DockerHosts.find_by(cvms[i].id)
-         puts host.ip
+         
+         puts cvms[i].id.to_s + " " + cvms[i].docker_hosts_id.to_s
+         host = DockerHosts.find_by(cvms[i].docker_hosts_id)
+         
          ip.push(host.ip)
       end
       puts cvms 
+      puts ip
       threads = (1..count).map do |i|
           Thread.new(i) do |i|
                 cvmid = cvms[i-1].id
-                cvmname = "#{cvms[i-1].docker_users_id}_#{cvmid}"                
-                res = HTTParty.get("http://#{ip[i-1]}:3000/api/stats/#{iteration}/#{cvmname}")  
+                cvmname = "#{cvms[i-1].docker_users_id}_#{cvmid}"  
+                puts ip[i-1]
+                
+                
+
+                res = HTTParty.get("http://#{ip[i-1]}:3000/api/stats/#{iteration}/#{cvmname}") 
+
                 stats = JSON.parse(res.body)
+                puts stats
                 memused_in_mb = 0
                 memtotal_in_mb = 0
                 stats['memvalues'].each  do |str|
@@ -139,7 +158,7 @@ class DockerCvm < ActiveRecord::Base
      puts var2   
 
   end
-  def connect
+  def self.connect
     username = 'ritika'
     password = 'ritika'
     database = 'stats'

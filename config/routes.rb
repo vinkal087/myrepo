@@ -42,6 +42,9 @@ Rest::Application.routes.draw do
     post 'edithost/:id' => 'hostapi#edithost'
     get 'getactivehosts' => 'hostapi#showhosts_active'
     get 'lastinfluxdata/:id' => 'hostapi#get_latest_data_from_influx'
+    get 'lastinfluxdatamem/:id' => 'hostapi#get_latest_data_from_influx_mem'
+    get 'lastinfluxcvmdata/:id' => 'cvmapi#get_latest_cvm_data_from_influx'
+    get 'lastinfluxcvmdatamem/:id' => 'cvmapi#get_latest_cvm_data_from_influx_mem'
 
   end
   # Example resource route with options:
